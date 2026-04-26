@@ -1,15 +1,26 @@
 # Render Blueprint for avidx-agents.
 # Each agent is a separate cron service. All services pull shared secrets
 # from the avidx-agents-shared env group (created manually in Render).
-# Cron expressions are UTC.
+# Cron expressions are UTC. Mitch is Austin CT (CDT = UTC-5, CST = UTC-6).
+# Accept 1-hour CDT/CST drift for v1; fix with a TZ library later if needed.
 
 services:
   - type: cron
-    name: hello-world-agent
+    name: planning-kickoff
     env: node
     region: oregon
-    schedule: "0 12 * * *"
-    buildCommand: pnpm install && pnpm build
-    startCommand: pnpm tsx agents/hello-world/index.ts
+    schedule: "30 14 * * 1"    # Mondays 14:30 UTC = 9:30am CDT / 8:30am CST
+    buildCommand: pnpm install
+    startCommand: pnpm tsx agents/planning/index.ts --mode=kickoff
+    envVars:
+      - fromGroup: avidx-agents-shared
+
+  - type: cron
+    name: planning-runway
+    env: node
+    region: oregon
+    schedule: "0 23 * * 5"     # Fridays 23:00 UTC = 6:00pm CDT / 5:00pm CST
+    buildCommand: pnpm install
+    startCommand: pnpm tsx agents/planning/index.ts --mode=runway
     envVars:
       - fromGroup: avidx-agents-shared
