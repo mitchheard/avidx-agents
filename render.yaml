@@ -24,3 +24,13 @@ services:
     startCommand: pnpm tsx agents/planning/index.ts --mode=runway
     envVars:
       - fromGroup: avidx-agents-shared
+
+  - type: cron
+    name: morning-brief
+    env: node
+    region: oregon
+    schedule: "0 12 * * 1-5"   # Weekdays 12:00 UTC = 7:00am CDT / 6:00am CST
+    buildCommand: pnpm install
+    startCommand: pnpm tsx agents/morning-brief/index.ts
+    envVars:
+      - fromGroup: avidx-agents-shared

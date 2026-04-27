@@ -201,3 +201,50 @@ export async function getProductPage(pageId: string): Promise<string> {
   const blocks = await getAllBlocks(pageId);
   return blocks.map(extractText).filter(Boolean).join('\n');
 }
+
+// ── Agent state (last-run timestamps) ─────────────────────────────────────────
+//
+// Stored as paragraph blocks in the hub page with the format:
+//   [agent-state:{key}] 2026-04-26T12:00:00.000Z
+//
+// These blocks are appended at the end of the hub page and are invisible in
+// normal Notion editing unless you scroll to the bottom.
+
+function agentStatePrefix(agentKey: string): string {
+  return `[agent-state:${agentKey}]`;
+}
+
+export async function getAgentLastRun(agentKey: string): Promise<string | null> {
+  const blocks = await getAllBlocks(HUB_PAGE_ID);
+  const prefix = agentStatePrefix(agentKey);
+  const block = blocks.find((b) => extractText(b).startsWith(prefix));
+  if (!block) return null;
+  const iso = extractText(block).slice(prefix.length).trim();
+  return iso || null;
+}
+
+export async function setAgentLastRun(agentKey: string, iso: string): Promise<void> {
+  const blocks = await getAllBlocks(HUB_PAGE_ID);
+  const prefix = agentStatePrefix(agentKey);
+
+  // Delete existing state block if present
+  const existing = blocks.find((b) => extractText(b).startsWith(prefix));
+  if (existing) {
+    await getNotionClient()
+      .blocks.delete({ block_id: existing.id })
+      .catch(() => undefined);
+  }
+
+  await (getNotionClient().blocks.children.append as (p: unknown) => Promise<unknown>)({
+    block_id: HUB_PAGE_ID,
+    children: [
+      {
+        object: 'block',
+        type: 'paragraph',
+        paragraph: {
+          rich_text: [{ type: 'text', text: { content: `${prefix} ${iso}` } }],
+        },
+      },
+    ],
+  });
+}

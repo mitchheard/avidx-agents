@@ -86,8 +86,9 @@ function buildPayload(
 }
 
 function parseDigest(raw: string): PlanningDigest | null {
-  // Strip markdown code fences if Claude wraps the JSON
-  const cleaned = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```$/m, '').trim();
+  const start = raw.indexOf('{');
+  const end = raw.lastIndexOf('}');
+  const cleaned = start !== -1 && end !== -1 ? raw.slice(start, end + 1) : raw.trim();
   try {
     const parsed = JSON.parse(cleaned) as PlanningDigest;
     if (!parsed.mode || !parsed.date || !parsed.primary_focus) return null;

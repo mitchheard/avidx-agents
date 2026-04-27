@@ -16,6 +16,11 @@ const EnvSchema = z.object({
   UMAMI_PASSWORD: z.string().min(1),
   NOTION_TOKEN: z.string().min(1),
   NODE_ENV: z.enum(['development', 'production']).default('development'),
+  // Google — required only by the morning-brief agent; optional here so other agents don't fail without them
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+  GOOGLE_REFRESH_TOKEN: z.string().min(1).optional(),
+  GOOGLE_WORK_CALENDAR_ID: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
