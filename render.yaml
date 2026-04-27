@@ -11,7 +11,7 @@ services:
     region: oregon
     schedule: "30 14 * * 1"    # Mondays 14:30 UTC = 9:30am CDT / 8:30am CST
     buildCommand: pnpm install
-    startCommand: pnpm tsx agents/planning/index.ts --mode=kickoff
+    startCommand: ./node_modules/.bin/tsx agents/planning/index.ts --mode=kickoff
     envVars:
       - fromGroup: avidx-agents-shared
 
@@ -21,7 +21,7 @@ services:
     region: oregon
     schedule: "0 23 * * 5"     # Fridays 23:00 UTC = 6:00pm CDT / 5:00pm CST
     buildCommand: pnpm install
-    startCommand: pnpm tsx agents/planning/index.ts --mode=runway
+    startCommand: ./node_modules/.bin/tsx agents/planning/index.ts --mode=runway
     envVars:
       - fromGroup: avidx-agents-shared
 
@@ -31,6 +31,6 @@ services:
     region: oregon
     schedule: "0 12 * * 1-5"   # Weekdays 12:00 UTC = 7:00am CDT / 6:00am CST
     buildCommand: pnpm install
-    startCommand: pnpm tsx agents/morning-brief/index.ts
+    startCommand: ./node_modules/.bin/tsx agents/morning-brief/index.ts
     envVars:
       - fromGroup: avidx-agents-shared
