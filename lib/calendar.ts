@@ -40,9 +40,20 @@ export async function listEventsNextNDays(n: number): Promise<CalendarEvent[]> {
   const env = loadEnv();
   const workCalendarId = env.GOOGLE_WORK_CALENDAR_ID;
 
-  const timeMin = new Date();
-  timeMin.setHours(0, 0, 0, 0);
-  const timeMax = new Date(timeMin);
+  const now = new Date();
+
+  // Step 1: get today's date string in CT (en-CA gives YYYY-MM-DD format)
+  const ctDateStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Chicago',
+  }).format(now);
+
+  // Step 2: compute CT's current UTC offset
+  const ctNowMs = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' })).getTime();
+  const ctOffsetMs = now.getTime() - ctNowMs; // ms CT is behind UTC
+
+  // Step 3: CT midnight in UTC = midnight of ctDateStr (as UTC) + offset
+  const timeMin = new Date(new Date(`${ctDateStr}T00:00:00Z`).getTime() + ctOffsetMs);
+  const timeMax = new Date(timeMin.getTime());
   timeMax.setDate(timeMax.getDate() + n);
 
   // Enumerate all subscribed calendars
