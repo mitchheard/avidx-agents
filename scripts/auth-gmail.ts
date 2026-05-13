@@ -8,13 +8,8 @@
  *   - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET set in .env
  *   - Google Cloud project with Gmail API and Calendar API enabled
  *   - OAuth 2.0 Desktop app credential (NOT web application type)
- *
- * NOTE ON OOB DEPRECATION:
- *   Google deprecated the OOB flow (urn:ietf:wg:oauth:2.0:oob) in Oct 2022.
- *   If this script fails with "invalid_grant" or "redirect_uri_mismatch", switch to
- *   the localhost flow: change REDIRECT_URI to "http://localhost:8080", uncomment the
- *   http.createServer block below, and add http://localhost:8080 as an authorized
- *   redirect URI in your Google Cloud OAuth credential.
+ *   - http://localhost:8080 listed as an authorized redirect URI on the OAuth client
+ *     (Desktop OAuth clients auto-allow loopback; only Web app clients need this set)
  *
  * Output:
  *   Prints GOOGLE_REFRESH_TOKEN — store it in your .env and Render env group.
@@ -24,7 +19,7 @@
 
 import 'dotenv/config';
 import { google } from 'googleapis';
-import * as readline from 'node:readline/promises';
+import * as http from 'node:http';
 
 const CLIENT_ID = process.env['GOOGLE_CLIENT_ID'];
 const CLIENT_SECRET = process.env['GOOGLE_CLIENT_SECRET'];
@@ -34,7 +29,8 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
   process.exit(1);
 }
 
-const REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob';
+const PORT = 8080;
+const REDIRECT_URI = `http://localhost:${PORT}`;
 
 const SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
@@ -42,6 +38,40 @@ const SCOPES = [
 ];
 
 const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+
+function waitForAuthCode(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      try {
+        const url = new URL(req.url ?? '/', REDIRECT_URI);
+        const code = url.searchParams.get('code');
+        const error = url.searchParams.get('error');
+        if (error) {
+          res.writeHead(400, { 'Content-Type': 'text/plain' });
+          res.end(`OAuth error: ${error}`);
+          server.close();
+          reject(new Error(`OAuth error: ${error}`));
+          return;
+        }
+        if (!code) {
+          res.writeHead(400, { 'Content-Type': 'text/plain' });
+          res.end('Missing ?code parameter');
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('Auth code received. You can close this tab and return to the terminal.');
+        server.close();
+        resolve(code);
+      } catch (err) {
+        server.close();
+        reject(err);
+      }
+    });
+    server.listen(PORT, () => {
+      console.log(`Listening on ${REDIRECT_URI} for OAuth callback…`);
+    });
+  });
+}
 
 async function main(): Promise<void> {
   const authUrl = oauth2Client.generateAuthUrl({
@@ -58,18 +88,18 @@ async function main(): Promise<void> {
   console.log(authUrl);
   console.log('\n─────────────────────────────────────────────────────\n');
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  const code = await rl.question('Paste the authorization code shown in the browser: ');
-  rl.close();
+  const code = await waitForAuthCode();
 
   let tokens;
   try {
-    const result = await oauth2Client.getToken(code.trim());
+    const result = await oauth2Client.getToken(code);
     tokens = result.tokens;
   } catch (err) {
     console.error('\nFailed to exchange code for tokens:', err);
-    console.error('\nIf you see "redirect_uri_mismatch", OOB may be deprecated for your project.');
-    console.error('See the localhost fallback instructions in the comment at the top of this file.');
+    console.error(
+      '\nIf you see "redirect_uri_mismatch", add http://localhost:8080 as an authorized',
+    );
+    console.error('redirect URI on this OAuth client in Google Cloud Console.');
     process.exit(1);
   }
 
