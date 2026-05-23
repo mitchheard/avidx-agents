@@ -27,6 +27,7 @@ type MorningBrief = {
     count: number;
     one_liner: string;
     highlights: Array<{ source: string; summary: string }>;
+    also_received?: string;
   };
 };
 
@@ -66,8 +67,16 @@ function buildPayload(
       ? upcomingEvents.map((e) => {
           const day = new Date(e.start.length === 10 ? e.start + 'T12:00:00' : e.start)
             .toLocaleDateString('en-US', { timeZone: 'America/Chicago', weekday: 'short' });
+          const timeStr = e.isAllDay
+            ? ''
+            : ` — ${new Date(e.start).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+                timeZone: 'America/Chicago',
+              })}`;
           const loc = e.location ? ` (${e.location})` : '';
-          return `- ${day}: ${e.title}${loc}`;
+          return `- ${day}: ${e.title}${timeStr}${loc}`;
         })
       : ['(nothing upcoming)']),
     '',
@@ -185,6 +194,10 @@ function buildBlocks(brief: MorningBrief): SlackBlock[] {
     for (const h of brief.newsletter_summary.highlights) {
       nlLines.push(`• *${h.source}:* ${h.summary}`);
     }
+  }
+  if (brief.newsletter_summary.also_received) {
+    nlLines.push('');
+    nlLines.push(`_Also in: ${brief.newsletter_summary.also_received}_`);
   }
   blocks.push(section(nlLines.join('\n')));
 

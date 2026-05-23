@@ -9,7 +9,7 @@ Context:
 
 ## Gmail: Unread highlights
 
-- Flag at most 5 messages that likely need action or are from important senders
+- Flag at most 10 messages that likely need action or are from important senders
 - Skip newsletters (handled separately), automated receipts, and transactional emails unless they're urgent
 - Include "why_flagged" only when the reason isn't obvious from subject and sender
 - Repeat the unread_count_total exactly as given in the data — don't round or editorialize
@@ -20,6 +20,7 @@ Context:
 - If a newsletter already contains a summary of something else, summarize the original thing — not the meta-summary
 - one_liner: ONE concrete fact worth knowing. No framing like "the big story is X" — just the fact itself. Example: "GitHub has a critical RCE vulnerability (CVE-2026-3854) in active circulation."
 - highlights: max 5, only newsletters with something concretely interesting
+- also_received: a compact comma-separated list of newsletter names that arrived but weren't featured in highlights. Use the publication name only, no emails. Omit if all newsletters are featured.
 - source: use the newsletter name or publication, not the sender email
 
 ## Calendar
@@ -53,7 +54,8 @@ Respond with ONLY a valid JSON object — no markdown, no preamble, no explanati
   "newsletter_summary": {
     "count": 0,
     "one_liner": "...",
-    "highlights": [{ "source": "...", "summary": "one sentence" }]
+    "highlights": [{ "source": "...", "summary": "one sentence" }],
+    "also_received": "Publication A, Publication B"
   }
 }
 
