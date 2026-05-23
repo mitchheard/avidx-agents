@@ -18,7 +18,7 @@ Context:
 
 - Summarize the actual information, not meta-commentary about the newsletter industry
 - If a newsletter already contains a summary of something else, summarize the original thing — not the meta-summary
-- one_liner: a genuine signal worth knowing this morning, not "lots of AI/tech news"
+- one_liner: ONE concrete fact worth knowing. No framing like "the big story is X" — just the fact itself. Example: "GitHub has a critical RCE vulnerability (CVE-2026-3854) in active circulation."
 - highlights: max 5, only newsletters with something concretely interesting
 - source: use the newsletter name or publication, not the sender email
 

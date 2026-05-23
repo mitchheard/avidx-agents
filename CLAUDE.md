@@ -12,7 +12,7 @@ A TypeScript monorepo of scheduled AI agents. Each agent is a standalone Node en
 - **pnpm** for package management. Do not introduce npm or yarn lockfiles.
 - **Node 20+.** Use built-in `fetch`, `node:` prefixed imports, native ESM.
 - **Raw `@anthropic-ai/sdk`.** No LangChain, no CrewAI, no LlamaIndex, no agent frameworks of any kind. If a task seems to call for one, model it directly with the SDK's tool-use loop instead.
-- **Render Cron Jobs** for hosting. Agents run directly via `pnpm tsx agents/<name>/index.ts` — no compile step, no `dist/`. Each invocation must exit cleanly; no daemons.
+- **Render Cron Jobs** for hosting. Agents run directly via `./node_modules/.bin/tsx agents/<name>/index.ts` — no compile step, no `dist/`. Each invocation must exit cleanly; no daemons. `tsx` must be in `dependencies` (not `devDependencies`) because Render prunes devDeps after install.
 
 ## Layout
 
@@ -32,7 +32,7 @@ When adding a new tool: define the JSON schema and the handler together in `tool
 - `pnpm install` — install dependencies
 - `pnpm dev:hello` — run the hello-world agent locally (one-shot, exits on completion)
 - `pnpm build` / `pnpm typecheck` — both run `tsc --noEmit`; there is no compile output
-- Run any agent: `pnpm tsx agents/<name>/index.ts` (same command Render uses in production)
+- Run any agent locally: `pnpm tsx agents/<name>/index.ts`
 
 No test runner is wired up yet. Add one when the first agent needs coverage.
 

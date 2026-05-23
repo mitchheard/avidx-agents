@@ -52,7 +52,6 @@ function buildPayload(
   events: CalendarEvent[],
   sinceISO: string,
 ): string {
-  const todayStart = today + 'T00:00:00';
   const todayEvents = events.filter((e) => e.start.startsWith(today));
   const upcomingEvents = events.filter((e) => !e.start.startsWith(today));
 
@@ -63,7 +62,14 @@ function buildPayload(
     ...(todayEvents.length ? todayEvents.map(formatEvent) : ['(no events today)']),
     '',
     '## Calendar: Upcoming (next 2 days)',
-    ...(upcomingEvents.length ? upcomingEvents.map(formatEvent) : ['(nothing upcoming)']),
+    ...(upcomingEvents.length
+      ? upcomingEvents.map((e) => {
+          const day = new Date(e.start.length === 10 ? e.start + 'T12:00:00' : e.start)
+            .toLocaleDateString('en-US', { timeZone: 'America/Chicago', weekday: 'short' });
+          const loc = e.location ? ` (${e.location})` : '';
+          return `- ${day}: ${e.title}${loc}`;
+        })
+      : ['(nothing upcoming)']),
     '',
     `## Gmail: Unread (${unread.length} messages since ${sinceISO})`,
     ...(unread.length
@@ -192,7 +198,14 @@ async function main(): Promise<void> {
 
   const lastRun = await getAgentLastRun(AGENT_NAME);
   const sinceISO = lastRun ?? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const today = new Date().toISOString().slice(0, 10);
+  const ctDate = new Date().toLocaleString('en-US', {
+    timeZone: 'America/Chicago',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const [m, d, y] = ctDate.split('/');
+  const today = `${y}-${m}-${d}`;
 
   logger.info(`${AGENT_NAME}: fetching data since ${sinceISO}`);
 

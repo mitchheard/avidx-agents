@@ -65,7 +65,7 @@ async function listMessagesSince(query: string): Promise<GmailMessage[]> {
 
 export async function listUnreadSince(sinceISO: string): Promise<GmailMessage[]> {
   const sinceSeconds = Math.floor(new Date(sinceISO).getTime() / 1000);
-  return listMessagesSince(`is:unread after:${sinceSeconds}`);
+  return listMessagesSince(`is:unread -label:Newsletters after:${sinceSeconds}`);
 }
 
 export async function listByLabelSince(label: string, sinceISO: string): Promise<GmailMessage[]> {
