@@ -17,13 +17,18 @@ A TypeScript monorepo of scheduled AI agents. Each agent is a standalone Node en
 ## Layout
 
 ```
-agents/<name>/   one directory per agent; entrypoint runs to completion
+agents/<name>/   one directory per agent; entrypoint runs to completion on a Render Cron Job
   hello-world/   placeholder verifying infra end-to-end; delete once first real agent ships
+services/<name>/ always-on Render Web Services (not crons); long-running process, not one-shot
 lib/             shared code: env, claude, slack, logger (real); linear, notion, umami (stubs)
 tools/           reusable Anthropic tool definitions (currently empty)
 ```
 
+All Render services and cron jobs are declared in `render.yaml`. Changes deploy automatically on push to main.
+
 When adding a new agent: create `agents/<name>/index.ts`, compose tools from `tools/`, share infrastructure via `lib/`. Do not duplicate a tool definition into an agent — promote it to `tools/` and import. The `README.md` has the full add-an-agent checklist (script entry, render.yaml service block).
+
+When adding a new service: create `services/<name>/index.ts` and add a `type: web` entry to `render.yaml`. Services run via `./node_modules/.bin/tsx services/<name>/index.ts` — use `./node_modules/.bin/tsx` directly (not `pnpm tsx`) because Render prunes `devDependencies` in production; `tsx` must stay in `dependencies`.
 
 When adding a new tool: define the JSON schema and the handler together in `tools/<tool-name>.ts`, exported as a pair the agent loop can register.
 
@@ -45,3 +50,4 @@ No test runner is wired up yet. Add one when the first agent needs coverage.
 - **Tool handlers are pure where possible** — take inputs, return outputs, push side effects (network, disk) behind `lib/` clients so they can be swapped in tests.
 - **Errors must post to `#agent-errors`.** Wrap each agent's `main()` in `.catch()` that calls `logger.error(agentName, err)` and exits 1. The logger redacts `KEY|TOKEN|WEBHOOK|PASSWORD` patterns and truncates stacks to 2000 chars.
 - **Slack channel routing** is centralized in `lib/slack.ts` `postToChannel(channel, text, blocks?)`. Add a channel by extending the `Channel` union and `webhookFor` switch.
+- **Slack auth is split by use case.** Agents post via incoming webhooks (`lib/slack.ts`, `SLACK_WEBHOOK_*` env vars). The webhook receiver service uses `SLACK_BOT_TOKEN` for Slack Web API calls (reading channel history, fetching thread parents) — a different auth mechanism. Both credentials live in the `avidx-agents-shared` env group.
