@@ -241,6 +241,7 @@ async function main(): Promise<void> {
   logger.info(`${AGENT_NAME}: calling Claude`);
   const raw = await callClaude([{ role: 'user', content: payload }], {
     system: MORNING_BRIEF_SYSTEM_PROMPT,
+    model: 'claude-haiku-4-5-20251001',
     maxTokens: 2048,
   });
 

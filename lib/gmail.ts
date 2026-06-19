@@ -2,7 +2,7 @@ import { google } from 'googleapis';
 import type { gmail_v1 } from 'googleapis';
 import { getOAuthClient } from './google-auth';
 
-const BODY_MAX_CHARS = 2000;
+const BODY_MAX_CHARS = 1000;
 
 export type GmailMessage = {
   id: string;
