@@ -53,8 +53,14 @@ function buildPayload(
   events: CalendarEvent[],
   sinceISO: string,
 ): string {
-  const todayEvents = events.filter((e) => e.start.startsWith(today));
-  const upcomingEvents = events.filter((e) => !e.start.startsWith(today));
+  // Multi-day all-day events (e.g. "Hyatt Weekend") start before today but
+  // overlap today — treat them as today events, not upcoming.
+  const todayEvents = events.filter(
+    (e) =>
+      e.start.startsWith(today) ||
+      (e.isAllDay && e.start.slice(0, 10) < today && e.end > today),
+  );
+  const upcomingEvents = events.filter((e) => e.start.slice(0, 10) > today);
 
   const sections: string[] = [
     `Today: ${today}`,
