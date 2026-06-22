@@ -19,7 +19,7 @@ Context:
 - Summarize the actual information, not meta-commentary about the newsletter industry
 - If a newsletter already contains a summary of something else, summarize the original thing — not the meta-summary
 - one_liner: ONE concrete fact worth knowing. No framing like "the big story is X" — just the fact itself. Example: "GitHub has a critical RCE vulnerability (CVE-2026-3854) in active circulation."
-- highlights: max 5, only newsletters with something concretely interesting
+- highlights: max 5, only newsletters with something concretely interesting. Always include Lenny's Newsletter and Stratechery if they arrived, even if the content is lighter than usual — feature them first.
 - also_received: a compact comma-separated list of newsletter names that arrived but weren't featured in highlights. Use the publication name only, no emails. Omit if all newsletters are featured.
 - source: use the newsletter name or publication, not the sender email
 
