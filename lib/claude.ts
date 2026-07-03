@@ -11,7 +11,7 @@ export function getClaude(): Anthropic {
   if (client) return client;
   const env = loadEnv();
   // SDK has built-in exponential backoff for 429/5xx/529 — don't double-wrap.
-  client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 3 });
+  client = new Anthropic({ apiKey: env.AGENTS_ANTHROPIC_API_KEY, maxRetries: 3 });
   return client;
 }
 

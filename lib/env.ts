@@ -4,7 +4,7 @@ import { z } from 'zod';
 loadDotenv();
 
 const EnvSchema = z.object({
-  ANTHROPIC_API_KEY: z.string().min(1),
+  AGENTS_ANTHROPIC_API_KEY: z.string().min(1),
   SLACK_WEBHOOK_DIGEST: z.string().url(),
   SLACK_WEBHOOK_ALERTS: z.string().url(),
   SLACK_WEBHOOK_ERRORS: z.string().url(),
