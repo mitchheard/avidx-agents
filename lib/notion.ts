@@ -1,5 +1,6 @@
 import { Client, isFullBlock } from '@notionhq/client';
 import { loadEnv } from './env';
+import { withRetry } from './retry';
 
 const HUB_PAGE_ID = '33567fabf8ff818787eaeaf6f7476ced';
 
@@ -37,10 +38,14 @@ async function getAllBlocks(blockId: string): Promise<NotionBlock[]> {
   let cursor: string | undefined;
 
   do {
-    const response = await getNotionClient().blocks.children.list({
-      block_id: blockId,
-      ...(cursor ? { start_cursor: cursor } : {}),
-    });
+    const response = await withRetry(
+      () =>
+        getNotionClient().blocks.children.list({
+          block_id: blockId,
+          ...(cursor ? { start_cursor: cursor } : {}),
+        }),
+      { agentName: 'notion' },
+    );
     for (const block of response.results) {
       if (isFullBlock(block)) blocks.push(block as unknown as NotionBlock);
     }
@@ -168,9 +173,9 @@ export async function updateCurrentFocus(newMarkdown: string): Promise<void> {
   // Delete existing content (best-effort — ignore individual failures)
   await Promise.all(
     contentBlocks.map((b) =>
-      getNotionClient()
-        .blocks.delete({ block_id: b.id })
-        .catch(() => undefined),
+      withRetry(() => getNotionClient().blocks.delete({ block_id: b.id }), {
+        agentName: 'notion',
+      }).catch(() => undefined),
     ),
   );
 
@@ -181,19 +186,33 @@ export async function updateCurrentFocus(newMarkdown: string): Promise<void> {
     // The `after` param inserts blocks immediately after the heading rather than at page end.
     // Cast as any: `after` is in the Notion REST API spec but may not be typed in all SDK versions.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (getNotionClient().blocks.children.append as (p: any) => Promise<unknown>)({
-      block_id: HUB_PAGE_ID,
-      children: newBlocks,
-      after: headingBlock.id,
-    });
+    const appendWithAfter = getNotionClient().blocks.children.append as (
+      p: any,
+    ) => Promise<unknown>;
+    await withRetry(
+      () =>
+        appendWithAfter({
+          block_id: HUB_PAGE_ID,
+          children: newBlocks,
+          after: headingBlock.id,
+        }),
+      { agentName: 'notion' },
+    );
   } catch {
     // Fallback: append to end of page. The Current Focus content will appear at the
     // bottom, which is non-ideal but keeps the update from failing entirely.
     // Fix: ensure @notionhq/client version exposes the `after` param.
-    await (getNotionClient().blocks.children.append as (p: unknown) => Promise<unknown>)({
-      block_id: HUB_PAGE_ID,
-      children: newBlocks,
-    });
+    const append = getNotionClient().blocks.children.append as (
+      p: unknown,
+    ) => Promise<unknown>;
+    await withRetry(
+      () =>
+        append({
+          block_id: HUB_PAGE_ID,
+          children: newBlocks,
+        }),
+      { agentName: 'notion' },
+    );
   }
 }
 
@@ -230,21 +249,29 @@ export async function setAgentLastRun(agentKey: string, iso: string): Promise<vo
   // Delete existing state block if present
   const existing = blocks.find((b) => extractText(b).startsWith(prefix));
   if (existing) {
-    await getNotionClient()
-      .blocks.delete({ block_id: existing.id })
-      .catch(() => undefined);
+    await withRetry(
+      () => getNotionClient().blocks.delete({ block_id: existing.id }),
+      { agentName: 'notion' },
+    ).catch(() => undefined);
   }
 
-  await (getNotionClient().blocks.children.append as (p: unknown) => Promise<unknown>)({
-    block_id: HUB_PAGE_ID,
-    children: [
-      {
-        object: 'block',
-        type: 'paragraph',
-        paragraph: {
-          rich_text: [{ type: 'text', text: { content: `${prefix} ${iso}` } }],
-        },
-      },
-    ],
-  });
+  const append = getNotionClient().blocks.children.append as (
+    p: unknown,
+  ) => Promise<unknown>;
+  await withRetry(
+    () =>
+      append({
+        block_id: HUB_PAGE_ID,
+        children: [
+          {
+            object: 'block',
+            type: 'paragraph',
+            paragraph: {
+              rich_text: [{ type: 'text', text: { content: `${prefix} ${iso}` } }],
+            },
+          },
+        ],
+      }),
+    { agentName: 'notion' },
+  );
 }

@@ -1,5 +1,6 @@
 import { LinearClient } from '@linear/sdk';
 import { loadEnv } from './env';
+import { withRetry } from './retry';
 
 const TEAM_KEY = 'AVIDX';
 const LINEAR_WORKSPACE = 'avidx';
@@ -36,7 +37,7 @@ function getClient(): LinearClient {
 type RawIssue = Awaited<ReturnType<LinearClient['issues']>>['nodes'][number];
 
 async function toLinearIssue(issue: RawIssue): Promise<LinearIssue> {
-  const state = await issue.state;
+  const state = await withRetry(async () => issue.state, { agentName: 'linear' });
   return {
     id: issue.id,
     identifier: issue.identifier,
@@ -68,7 +69,10 @@ export async function getOpenIssues(filter?: LinearIssueFilter): Promise<LinearI
         ],
       };
 
-  const result = await getClient().issues({ filter: issueFilter, first: 50 });
+  const result = await withRetry(
+    () => getClient().issues({ filter: issueFilter, first: 50 }),
+    { agentName: 'linear' },
+  );
   return Promise.all(result.nodes.map(toLinearIssue));
 }
 
@@ -77,13 +81,17 @@ export async function getInProgress(): Promise<LinearIssue[]> {
 }
 
 export async function getRecentlyCompleted(sinceISO: string): Promise<LinearIssue[]> {
-  const result = await getClient().issues({
-    filter: {
-      team: { key: { eq: TEAM_KEY } },
-      state: { type: { eq: 'completed' } },
-      completedAt: { gte: new Date(sinceISO) },
-    },
-    first: 50,
-  });
+  const result = await withRetry(
+    () =>
+      getClient().issues({
+        filter: {
+          team: { key: { eq: TEAM_KEY } },
+          state: { type: { eq: 'completed' } },
+          completedAt: { gte: new Date(sinceISO) },
+        },
+        first: 50,
+      }),
+    { agentName: 'linear' },
+  );
   return Promise.all(result.nodes.map(toLinearIssue));
 }
