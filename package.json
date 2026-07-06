@@ -12,6 +12,7 @@
     "dev:kickoff": "tsx agents/planning/index.ts --mode=kickoff",
     "dev:runway": "tsx agents/planning/index.ts --mode=runway",
     "dev:brief": "tsx agents/morning-brief/index.ts",
+    "dev:brief-agentic": "tsx agents/morning-brief-agentic/index.ts",
     "auth:gmail": "tsx scripts/auth-gmail.ts",
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit"

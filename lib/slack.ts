@@ -1,7 +1,7 @@
 import { IncomingWebhook, type IncomingWebhookSendArguments } from '@slack/webhook';
 import { loadEnv } from './env';
 
-export type Channel = 'digest' | 'alerts' | 'errors' | 'mail-zero' | 'inbox';
+export type Channel = 'digest' | 'alerts' | 'errors' | 'mail-zero' | 'inbox' | 'inbox-agentic';
 
 function webhookFor(channel: Channel): string {
   const env = loadEnv();
@@ -16,6 +16,8 @@ function webhookFor(channel: Channel): string {
       return env.SLACK_WEBHOOK_MAIL_ZERO;
     case 'inbox':
       return env.SLACK_WEBHOOK_INBOX;
+    case 'inbox-agentic':
+      return env.SLACK_WEBHOOK_INBOX_AGENTIC;
   }
 }
 
