@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { loadEnv } from './env';
 
 // Default model for all agents. Bump centrally when upgrading.
-export const DEFAULT_MODEL = 'claude-sonnet-4-6';
+export const DEFAULT_MODEL = 'claude-sonnet-5';
 export const DEFAULT_MAX_TOKENS = 4096;
 
 let client: Anthropic | undefined;

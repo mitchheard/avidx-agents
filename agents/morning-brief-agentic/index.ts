@@ -10,11 +10,12 @@ import { MORNING_BRIEF_AGENTIC_SYSTEM_PROMPT } from './prompts';
 
 const AGENT_NAME = 'morning-brief-agentic';
 
-// Standard API rates for DEFAULT_MODEL (Sonnet 4.6). Update alongside DEFAULT_MODEL
+// Standard API rates for DEFAULT_MODEL (Sonnet 5). Update alongside DEFAULT_MODEL
 // in lib/claude.ts — verify current numbers at
 // https://platform.claude.com/docs/en/about-claude/pricing before trusting stale ones.
-const INPUT_USD_PER_MTOK = 3;
-const OUTPUT_USD_PER_MTOK = 15;
+// Intro pricing through Aug 31 2026 — steps to $3/$15 standard after. Update this date-check or the value manually.
+const INPUT_USD_PER_MTOK = 2;
+const OUTPUT_USD_PER_MTOK = 10;
 
 function estimateCostUSD(inputTokens: number, outputTokens: number): number {
   return (
